@@ -1,0 +1,538 @@
+config_version: 2
+
+settings:
+  triggers:
+    crafting: true
+    enchanting: true
+    anvil: true
+  pdc_key: "gacha_rolled"
+  pdc_data_type: "BYTE"
+
+  roll:
+    min_attributes_per_item: 1
+    max_attributes_per_item: 4
+    allow_duplicate_attribute_ids: false
+    duplicate_modifier_mode: "UNIQUE"
+    max_roll_attempts_per_item: 20
+
+  lore:
+    append_mode: "APPEND"
+    stat_line_prefix: ""
+    show_rarity_prefix_once: true
+    decimal_places: 1
+
+  debug:
+    enabled: false
+    seed: -1
+    log_invalid_entries: true
+
+  commands:
+    reload_permission: "mysticcombat.reload"
+    admin_permission: "mysticcombat.admin"
+
+rarities:
+  Unchanged:
+    weight: 100
+    prefix: ""
+    stats_amount:
+      min: 0
+      max: 0
+  Common:
+    weight: 50
+    prefix: "      &f&l『Common』"
+    stats_amount:
+      min: 1
+      max: 2
+  Uncommon:
+    weight: 25
+    prefix: "    &a&l『Uncommon』"
+    stats_amount:
+      min: 1
+      max: 2
+  Rare:
+    weight: 15
+    prefix: "        &9&l『Rare』"
+    stats_amount:
+      min: 2
+      max: 3
+  Epic:
+    weight: 8
+    prefix: "        &5&l『Epic』"
+    stats_amount:
+      min: 2
+      max: 4
+  Legendary:
+    weight: 2
+    prefix: "    &6&l『Legendary』"
+    stats_amount:
+      min: 2
+      max: 5
+
+attributes_pool:
+  flat_damage_buff:
+    attribute: "GENERIC_ATTACK_DAMAGE"
+    operation: "ADD_NUMBER"
+    slot: "MAINHAND"
+    rarities: ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
+    weight: 100
+    value:
+      common:
+        min: 0.1
+        max: 0.5
+      uncommon:
+        min: 0.6
+        max: 1.9
+      rare:
+        min: 2.0
+        max: 3.5
+      epic:
+        min: 3.6
+        max: 4.9
+      legendary:
+        min: 5.0
+        max: 8.0
+      min: 0.1
+      max: 8.0
+    applicable_items:
+      - "*_SWORD"
+      - "*_SPEAR"
+      - "*_AXE"
+      - "TRIDENT"
+      - "MACE"
+      - "*_PICKAXE"
+      - "*_SHOVEL"
+      - "*_HOE"
+      - "BOW"
+      - "CROSSBOW"
+    blacklist_attributes: []
+    lore_format: "&c⚔ Damage +{value}"
+
+  knockback_buff:
+    attribute: "GENERIC_ATTACK_KNOCKBACK"
+    operation: "MULTIPLY_SCALAR_1"
+    slot: "MAINHAND"
+    rarities: [ "Uncommon", "Rare", "Epic", "Legendary" ]
+    weight: 40
+    value:
+      uncommon:
+        min: 0.01
+        max: 0.1
+      rare:
+        min: 0.11
+        max: 0.15
+      epic:
+        min: 0.16
+        max: 0.24
+      legendary:
+        min: 0.25
+        max: 0.4
+      min: 0.01
+      max: 0.4
+    applicable_items:
+      - "*_SWORD"
+      - "*_SPEAR"
+      - "*_AXE"
+      - "TRIDENT"
+      - "MACE"
+      - "*_PICKAXE"
+      - "*_SHOVEL"
+      - "*_HOE"
+    blacklist_attributes: [ ]
+    lore_format: "&c🔨 Knockback +{value}%"
+
+  attack_speed_percent:
+    attribute: "GENERIC_ATTACK_SPEED"
+    operation: "ADD_SCALAR"
+    slot: "MAINHAND"
+    rarities: ["Uncommon", "Rare", "Epic", "Legendary"]
+    weight: 80
+    value:
+      uncommon:
+        min: 0.01
+        max: 0.04
+      rare:
+        min: 0.05
+        max: 0.07
+      epic:
+        min: 0.08
+        max: 0.12
+      legendary:
+        min: 0.13
+        max: 0.15
+      min: 0.01
+      max: 0.15
+    applicable_items:
+      - "*_SWORD"
+      - "*_SPEAR"
+      - "*_AXE"
+      - "*_PICKAXE"
+      - "*_SHOVEL"
+    blacklist_attributes: ["heavy_strike_multiplier"]
+    lore_format: "&9⚡ Attack Speed +{value}%"
+
+  heavy_strike_multiplier:
+    attribute: "GENERIC_ATTACK_DAMAGE"
+    operation: "MULTIPLY_SCALAR_1"
+    slot: "MAINHAND"
+    rarities: ["Rare", "Epic", "Legendary"]
+    weight: 45
+    value:
+      rare:
+        min: 0.05
+        max: 0.10
+      epic:
+        min: 0.11
+        max: 0.20
+      legendary:
+        min: 0.21
+        max: 0.30
+      min: 0.01
+      max: 0.30
+    applicable_items:
+      - "*_SWORD"
+      - "*_SPEAR"
+      - "*_AXE"
+      - "TRIDENT"
+      - "MACE"
+    blacklist_attributes: ["attack_speed_percent"]
+    lore_format: "&c&l💥 Final Damage +{value}%"
+
+  armor_flat:
+    attribute: "GENERIC_ARMOR"
+    operation: "ADD_NUMBER"
+    slot: "ARMOR"
+    rarities: ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
+    weight: 95
+    value:
+      common:
+        min: 0.1
+        max: 0.5
+      uncommon:
+        min: 0.6
+        max: 1.0
+      rare:
+        min: 1.1
+        max: 1.5
+      epic:
+        min: 1.6
+        max: 2.0
+      legendary:
+        min: 2.1
+        max: 3.0
+      min: 0.1
+      max: 1.5
+    applicable_items:
+      - "*_HELMET"
+      - "*_CHESTPLATE"
+      - "*_LEGGINGS"
+      - "*_BOOTS"
+    blacklist_attributes: []
+    lore_format: "&7🛡 Armor +{value}"
+
+  armor_toughness_flat:
+    attribute: "GENERIC_ARMOR_TOUGHNESS"
+    operation: "ADD_NUMBER"
+    slot: "ARMOR"
+    rarities: ["Rare", "Epic", "Legendary"]
+    weight: 50
+    value:
+      rare:
+        min: 0.1
+        max: 0.5
+      epic:
+        min: 0.6
+        max: 1.3
+      legendary:
+        min: 1.4
+        max: 2.0
+      min: 0.1
+      max: 2.0
+    applicable_items:
+      - "*_HELMET"
+      - "*_CHESTPLATE"
+      - "*_LEGGINGS"
+      - "*_BOOTS"
+    blacklist_attributes: []
+    lore_format: "&3💠 Toughness +{value}"
+
+  max_health_flat:
+    attribute: "GENERIC_MAX_HEALTH"
+    operation: "ADD_NUMBER"
+    slot: "ARMOR"
+    rarities: ["Rare", "Epic", "Legendary"]
+    weight: 60
+    value:
+      rare:
+        min: 0.5
+        max: 1.5
+      epic:
+        min: 2.0
+        max: 3.5
+      legendary:
+        min: 4.0
+        max: 5.0
+      min: 0.5
+      max: 5.0
+    applicable_items:
+      - "*_HELMET"
+      - "*_CHESTPLATE"
+      - "*_LEGGINGS"
+      - "*_BOOTS"
+    blacklist_attributes: []
+    lore_format: "&d❤ Max Health +{value}"
+
+  add_scale_flat:
+    attribute: "GENERIC_SCALE"
+    operation: "ADD_NUMBER"
+    slot: "ARMOR"
+    rarities: ["Rare", "Epic", "Legendary"]
+    weight: 20
+    value:
+      rare:
+        min: 0.01
+        max: 0.02
+      epic:
+        min: 0.03
+        max: 0.04
+      legendary:
+        min: 0.1
+        max: 0.15
+      min: 0.01
+      max: 0.15
+    applicable_items:
+      - "*_CHESTPLATE"
+      - "*_LEGGINGS"
+    blacklist_attributes: ["minus_scale_flat"]
+    lore_format: "&5🍄 Max Scale +{value}"
+  minus_scale_flat:
+    attribute: "GENERIC_SCALE"
+    operation: "ADD_NUMBER"
+    slot: "ARMOR"
+    rarities: ["Rare", "Epic", "Legendary"]
+    weight: 20
+    value:
+      rare:
+        min: -0.02
+        max: -0.01
+      epic:
+        min: -0.04
+        max: -0.03
+      legendary:
+        min: -0.05
+        max: -0.15
+      min: -0.05
+      max: -0.015
+    applicable_items:
+      - "*_CHESTPLATE"
+      - "*_LEGGINGS"
+    blacklist_attributes: ["add_scale_flat"]
+    lore_format: "&5⏬ Max Scale {value}"
+  movement_speed_percent:
+    attribute: "GENERIC_MOVEMENT_SPEED"
+    operation: "ADD_SCALAR"
+    slot: "FEET"
+    rarities: ["Rare", "Epic", "Legendary"]
+    weight: 45
+    value:
+      rare:
+        min: 0.01
+        max: 0.05
+      epic:
+        min: 0.06
+        max: 0.09
+      legendary:
+        min: 0.1
+        max: 0.15
+      min: 0.01
+      max: 0.1
+    applicable_items:
+      - "*_BOOTS"
+    blacklist_attributes: [ ]
+    lore_format: "&9🥾 Move Speed +{value}%"
+  bow_movement_speed_percent:
+    attribute: "GENERIC_MOVEMENT_SPEED"
+    operation: "ADD_SCALAR"
+    slot: "MAINHAND"
+    rarities: ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
+    weight: 45
+    value:
+      common:
+        min: 0.01
+        max: 0.05
+      uncommon:
+        min: 0.06
+        max: 0.09
+      rare:
+        min: 0.10
+        max: 0.14
+      epic:
+        min: 0.15
+        max: 0.2
+      legendary:
+        min: 0.25
+        max: 0.3
+      min: 0.01
+      max: 0.3
+    applicable_items:
+      - "BOW"
+      - "CROSSBOW"
+    blacklist_attributes: []
+    lore_format: "&9🏹 Move Speed +{value}%"
+  oxygen_percent:
+    attribute: "GENERIC_OXYGEN_BONUS"
+    operation: "ADD_SCALAR"
+    slot: "HEAD"
+    rarities: ["Rare", "Epic", "Legendary"]
+    weight: 45
+    value:
+      rare:
+        min: 0.1
+        max: 0.25
+      epic:
+        min: 0.26
+        max: 0.4
+      legendary:
+        min: 0.4
+        max: 0.5
+      min: 0.1
+      max: 0.5
+    applicable_items:
+      - "*_HELMET"
+    blacklist_attributes: []
+    lore_format: "&b🫧 Oxygen +{value}%"
+  underwater_movement_speed_percent:
+    attribute: "GENERIC_WATER_MOVEMENT_EFFICIENCY"
+    operation: "ADD_SCALAR"
+    slot: "FEET"
+    rarities: ["Rare", "Epic", "Legendary"]
+    weight: 45
+    value:
+      rare:
+        min: 0.01
+        max: 0.05
+      epic:
+        min: 0.06
+        max: 0.09
+      legendary:
+        min: 0.1
+        max: 0.2
+      min: 0.01
+      max: 0.2
+    applicable_items:
+      - "*_BOOTS"
+    blacklist_attributes: []
+    lore_format: "&9🌊 Swim Speed +{value}%"
+
+  knockback_resistance_percent:
+    attribute: "GENERIC_KNOCKBACK_RESISTANCE"
+    operation: "ADD_SCALAR"
+    slot: "ARMOR"
+    rarities: [ "Legendary"]
+    weight: 30
+    value:
+      min: 0.05
+      max: 0.2
+    applicable_items:
+      - "*_CHESTPLATE"
+      - "*_LEGGINGS"
+      - "SHIELD"
+    blacklist_attributes: []
+    lore_format: "&8⚓ Knockback Resist +{value}%"
+
+  mining_speed_percent:
+    attribute: "PLAYER_BLOCK_BREAK_SPEED"
+    operation: "ADD_SCALAR"
+    slot: "MAINHAND"
+    rarities: ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
+    weight: 85
+    value:
+      common:
+        min: 0.01
+        max: 0.1
+      uncommon:
+        min: 0.11
+        max: 0.2
+      rare:
+        min: 0.21
+        max: 0.3
+      epic:
+        min: 0.31
+        max: 0.4
+      legendary:
+        min: 0.41
+        max: 0.5
+      min: 0.01
+      max: 0.5
+    applicable_items:
+      - "*_PICKAXE"
+      - "*_AXE"
+      - "*_SHOVEL"
+      - "*_HOE"
+    blacklist_attributes: []
+    lore_format: "&e⛏ Mining Speed +{value}%"
+
+  interaction_range_bonus:
+    attribute: "PLAYER_ENTITY_INTERACTION_RANGE"
+    operation: "ADD_NUMBER"
+    slot: "MAINHAND"
+    rarities: ["Rare", "Epic", "Legendary"]
+    weight: 25
+    value:
+      rare:
+        min: 0.01
+        max: 0.29
+      epic:
+        min: 0.3
+        max: 0.69
+      legendary:
+        min: 0.7
+        max: 1
+      min: 0.01
+      max: 1
+    applicable_items:
+      #- "*_SWORD"
+      #- "*_SPEAR"
+      #- "*_AXE"
+      - "TRIDENT"
+      - "*_PICKAXE"
+    blacklist_attributes: []
+    lore_format: "&f🎯 Reach +{value}"
+
+  luck_bonus:
+    attribute: "GENERIC_LUCK"
+    operation: "ADD_NUMBER"
+    slot: "ANY"
+    rarities: ["Uncommon", "Rare", "Epic", "Legendary"]
+    weight: 35
+    value:
+      uncommon:
+        min: 0.5
+        max: 1.0
+      rare:
+        min: 1.1
+        max: 2.0
+      epic:
+        min: 2.1
+        max: 3.0
+      legendary:
+        min: 3.1
+        max: 4.0
+      min: 0.5
+      max: 4.0
+    applicable_items:
+      - "*_HELMET"
+      - "*_CHESTPLATE"
+      - "*_LEGGINGS"
+      - "*_BOOTS"
+      - "*_SWORD"
+      - "*_SPEAR"
+      - "*_AXE"
+      - "*_PICKAXE"
+      - "*_SHOVEL"
+      - "*_HOE"
+      - "BOW"
+      - "CROSSBOW"
+      - "TRIDENT"
+      - "SHIELD"
+    blacklist_attributes: []
+    lore_format: "&a🍀 Luck +{value}"

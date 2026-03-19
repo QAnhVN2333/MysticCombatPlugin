@@ -1,0 +1,39 @@
+messages_version: 1
+
+general:
+  no_permission: "&cYou do not have permission."
+  player_only: "&cThis command can only be used by players."
+
+command:
+  reload:
+    success: "&aMysticCombat reloaded."
+    failed: "&cReload failed. Check console logs."
+
+  attribute:
+    usage: "&eUsage: /mc attribute <roll|add|remove|list|clean>"
+
+    roll:
+      usage: "&eUsage: /mc attribute roll <rarity>"
+      success: "&a{message}"
+      failed: "&c{message}"
+
+    add:
+      usage: "&eUsage: /mc attribute add <attribute_id> <value> [--force]"
+      invalid_value: "&cValue must be a valid number."
+      success: "&a{message}"
+      failed: "&c{message}"
+
+    remove:
+      usage: "&eUsage: /mc attribute remove <attribute_id> [value]"
+      invalid_value: "&cValue must be a valid number."
+      success: "&a{message}"
+      failed: "&c{message}"
+
+    clean:
+      success: "&a{message}"
+      failed: "&c{message}"
+
+    list:
+      header: "&6Configured MysticCombat attributes:"
+      empty: "&eNo configured attributes found."
+      entry: "&7- &f{id}&7 | type=&b{type}&7 | attr=&b{attribute}&7 | op=&b{operation}&7 | slot=&b{slot}&7 | weight=&b{weight}&7 | value=&b{min}..{max}&7 | rarities=&b{rarities}&7 | items=&b{applicable}"

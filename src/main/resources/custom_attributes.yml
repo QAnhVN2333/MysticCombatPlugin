@@ -1,0 +1,27 @@
+custom_attributes_version: 1
+
+custom_attributes:
+  MysticCombat.CRIT_RATE:
+    type: "CHANCE_ON_HIT"
+    pdc_key: "crit_rate"
+    default_operation: "ADD_NUMBER"
+    value_limits:
+      min: 0.0
+      max: 100.0
+    runtime:
+      event: "ENTITY_DAMAGE_BY_ENTITY"
+      conditions:
+        weapon_only: true
+      effects:
+        - action: "MULTIPLY_FINAL_DAMAGE"
+          multiplier_from: "MysticCombat.CRIT_DAMAGE"
+          fallback_multiplier: 1.5
+
+  MysticCombat.CRIT_DAMAGE:
+    type: "MULTIPLIER"
+    pdc_key: "crit_damage"
+    default_operation: "ADD_NUMBER"
+    value_limits:
+      min: 1.0
+      max: 5.0
+

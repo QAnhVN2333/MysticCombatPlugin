@@ -1,0 +1,17 @@
+name: MysticCombat
+version: '1.0.0'
+main: com.lyrinth.mysticcombat.Main
+api-version: '1.21'
+authors: [Lyrinth]
+commands:
+  mysticcombat:
+    description: Main command for MysticCombat
+    usage: /<command> reload | /<command> attribute <roll|add|remove|list|clean>
+    aliases: [mc]
+permissions:
+  mysticcombat.reload:
+    description: Allows reloading MysticCombat config
+    default: op
+  mysticcombat.admin:
+    description: Allows admin attribute commands
+    default: op
