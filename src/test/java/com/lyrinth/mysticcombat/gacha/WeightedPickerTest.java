@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -267,6 +269,30 @@ class WeightedPickerTest {
         assertEquals("\u00A79[Rare]", lore.get(lore.size() - 1));
     }
 
+    @Test
+    void addAttributeToArmorUsesUniqueModifierKeyPerItem() {
+        ConfigManager.Settings settings = createSettings(1, 1, false, "MERGE");
+        ConfigManager.RarityConfig rarity = new ConfigManager.RarityConfig("Common", 1, "", 1, 1);
+        ConfigManager.AttributeConfig maxHealth = createArmorAttribute("max_health_flat", 100);
+        GachaManager manager = createManager(settings, Map.of("Common", rarity), Map.of(maxHealth.id(), maxHealth), 42L);
+
+        ItemStack helmet = mockRollableItem(Material.DIAMOND_HELMET);
+        ItemStack chestplate = mockRollableItem(Material.DIAMOND_CHESTPLATE);
+
+        GachaManager.AdminActionResult helmetResult = manager.addAttributeToItem(helmet, "max_health_flat", 4.0D, false);
+        GachaManager.AdminActionResult chestplateResult = manager.addAttributeToItem(chestplate, "max_health_flat", 4.0D, false);
+
+        assertTrue(helmetResult.success());
+        assertTrue(chestplateResult.success());
+
+        AttributeModifier helmetModifier = helmet.getItemMeta().getAttributeModifiers(Attribute.GENERIC_MAX_HEALTH).iterator().next();
+        AttributeModifier chestplateModifier = chestplate.getItemMeta().getAttributeModifiers(Attribute.GENERIC_MAX_HEALTH).iterator().next();
+
+        assertNotEquals(helmetModifier.getKey(), chestplateModifier.getKey());
+        assertTrue(helmetModifier.getKey().getKey().startsWith("attr_max_health_flat__"));
+        assertTrue(chestplateModifier.getKey().getKey().startsWith("attr_max_health_flat__"));
+    }
+
     private GachaManager createManager(
             ConfigManager.Settings settings,
             Map<String, ConfigManager.RarityConfig> rarities,
@@ -296,12 +322,43 @@ class WeightedPickerTest {
         ItemMeta meta = mock(ItemMeta.class);
         PersistentDataContainer pdc = mock(PersistentDataContainer.class);
         Multimap<Attribute, AttributeModifier> modifiers = ArrayListMultimap.create();
+        Map<NamespacedKey, String> stringValues = new LinkedHashMap<>();
+        Map<NamespacedKey, Byte> byteValues = new LinkedHashMap<>();
         AtomicReference<List<String>> loreRef = new AtomicReference<>();
 
         when(itemStack.getType()).thenReturn(material);
         when(itemStack.getItemMeta()).thenReturn(meta);
         when(meta.getPersistentDataContainer()).thenReturn(pdc);
-        when(pdc.has(any(NamespacedKey.class), eq(PersistentDataType.BYTE))).thenReturn(false);
+        when(pdc.has(any(NamespacedKey.class), eq(PersistentDataType.BYTE))).thenAnswer(invocation -> byteValues.containsKey(invocation.getArgument(0)));
+        when(pdc.has(any(NamespacedKey.class), eq(PersistentDataType.STRING))).thenAnswer(invocation -> stringValues.containsKey(invocation.getArgument(0)));
+        when(pdc.get(any(NamespacedKey.class), eq(PersistentDataType.STRING))).thenAnswer(invocation -> stringValues.get(invocation.getArgument(0)));
+        when(pdc.get(any(NamespacedKey.class), eq(PersistentDataType.BYTE))).thenAnswer(invocation -> byteValues.get(invocation.getArgument(0)));
+        when(pdc.getKeys()).thenAnswer(invocation -> {
+            Set<NamespacedKey> keys = new LinkedHashSet<>();
+            keys.addAll(stringValues.keySet());
+            keys.addAll(byteValues.keySet());
+            return keys;
+        });
+
+        org.mockito.Mockito.doAnswer(invocation -> {
+            NamespacedKey key = invocation.getArgument(0);
+            String value = invocation.getArgument(2);
+            stringValues.put(key, value);
+            return null;
+        }).when(pdc).set(any(NamespacedKey.class), eq(PersistentDataType.STRING), any(String.class));
+        org.mockito.Mockito.doAnswer(invocation -> {
+            NamespacedKey key = invocation.getArgument(0);
+            Byte value = invocation.getArgument(2);
+            byteValues.put(key, value);
+            return null;
+        }).when(pdc).set(any(NamespacedKey.class), eq(PersistentDataType.BYTE), any(Byte.class));
+        org.mockito.Mockito.doAnswer(invocation -> {
+            NamespacedKey key = invocation.getArgument(0);
+            stringValues.remove(key);
+            byteValues.remove(key);
+            return null;
+        }).when(pdc).remove(any(NamespacedKey.class));
+
         when(meta.getAttributeModifiers()).thenReturn(modifiers);
         when(meta.getAttributeModifiers(any(Attribute.class))).thenAnswer(invocation -> modifiers.get(invocation.getArgument(0)));
         when(meta.hasAttributeModifiers()).thenAnswer(invocation -> !modifiers.isEmpty());
@@ -326,6 +383,10 @@ class WeightedPickerTest {
     }
 
     private ConfigManager.Settings createSettings(int minAttributes, int maxAttributes, boolean allowDuplicate) {
+        return createSettings(minAttributes, maxAttributes, allowDuplicate, "UNIQUE");
+    }
+
+    private ConfigManager.Settings createSettings(int minAttributes, int maxAttributes, boolean allowDuplicate, String duplicateMode) {
         return new ConfigManager.Settings(
                 true,
                 true,
@@ -335,7 +396,7 @@ class WeightedPickerTest {
                 minAttributes,
                 maxAttributes,
                 allowDuplicate,
-                "UNIQUE",
+                duplicateMode,
                 20,
                 "APPEND",
                 "&7> ",
@@ -381,6 +442,27 @@ class WeightedPickerTest {
                 applicableItems,
                 blacklist,
                 blacklist.stream().map(value -> value.toLowerCase(java.util.Locale.ROOT)).collect(java.util.stream.Collectors.toSet()),
+                "&7+{value}"
+        );
+    }
+
+    private ConfigManager.AttributeConfig createArmorAttribute(String id, int weight) {
+        return new ConfigManager.AttributeConfig(
+                id,
+                "GENERIC_MAX_HEALTH",
+                ConfigManager.AttributeType.VANILLA,
+                null,
+                Attribute.GENERIC_MAX_HEALTH,
+                AttributeModifier.Operation.ADD_NUMBER,
+                EquipmentSlotGroup.ARMOR,
+                List.of("Common"),
+                weight,
+                1.0D,
+                8.0D,
+                Map.of(),
+                List.of("*_HELMET", "*_CHESTPLATE", "*_LEGGINGS", "*_BOOTS"),
+                List.of(),
+                Set.of(),
                 "&7+{value}"
         );
     }

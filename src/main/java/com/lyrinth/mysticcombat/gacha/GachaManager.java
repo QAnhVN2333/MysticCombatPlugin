@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 public final class GachaManager {
 
@@ -37,6 +38,7 @@ public final class GachaManager {
     private static final String RUNTIME_CUSTOM_KEY_PREFIX = RUNTIME_KEY_PREFIX + "custom_";
     private static final String RUNTIME_DUPLICATE_SEPARATOR = "__";
     private static final String RUNTIME_LORE_CACHE_SUFFIX = "_lore_cache";
+    private static final String RUNTIME_ITEM_SCOPE_SUFFIX = "_item_scope";
     private static final double REMOVE_VALUE_EPSILON = 0.000001D;
 
     private final Main plugin;
@@ -165,6 +167,11 @@ public final class GachaManager {
                 AttributeModifier existing = findModifierByKey(meta, config.attribute(), modifierKey);
                 if (existing != null) {
                     finalAmount = existing.getAmount() + amount;
+                } else {
+                    AttributeModifier legacy = consumeLegacyMergeModifier(meta, config.attribute(), baseKeyPart, modifierKey);
+                    if (legacy != null) {
+                        finalAmount = legacy.getAmount() + amount;
+                    }
                 }
             }
 
@@ -536,6 +543,11 @@ public final class GachaManager {
             AttributeModifier existing = findModifierByKey(meta, config.attribute(), modifierKey);
             if (existing != null) {
                 finalAmount = existing.getAmount() + rolledAmount;
+            } else {
+                AttributeModifier legacy = consumeLegacyMergeModifier(meta, config.attribute(), baseKeyPart, modifierKey);
+                if (legacy != null) {
+                    finalAmount = legacy.getAmount() + rolledAmount;
+                }
             }
         }
 
@@ -693,16 +705,17 @@ public final class GachaManager {
             ConfigManager.Settings settings,
             Map<String, Integer> sessionCounters
     ) {
+        String scopedBaseKeyPart = withItemScope(baseKeyPart, meta, settings);
         if (!settings.allowDuplicateAttributeIds() || isMergeDuplicateMode(settings)) {
-            return createRuntimeKey(baseKeyPart);
+            return createRuntimeKey(scopedBaseKeyPart);
         }
 
-        int index = Math.max(1, sessionCounters.getOrDefault(baseKeyPart, 1));
-        while (hasModifierWithKey(meta, attribute, createRuntimeKey(baseKeyPart + RUNTIME_DUPLICATE_SEPARATOR + index))) {
+        int index = Math.max(1, sessionCounters.getOrDefault(scopedBaseKeyPart, 1));
+        while (hasModifierWithKey(meta, attribute, createRuntimeKey(scopedBaseKeyPart + RUNTIME_DUPLICATE_SEPARATOR + index))) {
             index++;
         }
-        sessionCounters.put(baseKeyPart, index + 1);
-        return createRuntimeKey(baseKeyPart + RUNTIME_DUPLICATE_SEPARATOR + index);
+        sessionCounters.put(scopedBaseKeyPart, index + 1);
+        return createRuntimeKey(scopedBaseKeyPart + RUNTIME_DUPLICATE_SEPARATOR + index);
     }
 
     private NamespacedKey resolveModifierKeyForApply(
@@ -712,18 +725,19 @@ public final class GachaManager {
             ConfigManager.Settings settings,
             boolean force
     ) {
+        String scopedBaseKeyPart = withItemScope(baseKeyPart, meta, settings);
         if (!settings.allowDuplicateAttributeIds() && !force) {
-            return createRuntimeKey(baseKeyPart);
+            return createRuntimeKey(scopedBaseKeyPart);
         }
         if (isMergeDuplicateMode(settings)) {
-            return createRuntimeKey(baseKeyPart);
+            return createRuntimeKey(scopedBaseKeyPart);
         }
 
         int index = 1;
-        while (hasModifierWithKey(meta, attribute, createRuntimeKey(baseKeyPart + RUNTIME_DUPLICATE_SEPARATOR + index))) {
+        while (hasModifierWithKey(meta, attribute, createRuntimeKey(scopedBaseKeyPart + RUNTIME_DUPLICATE_SEPARATOR + index))) {
             index++;
         }
-        return createRuntimeKey(baseKeyPart + RUNTIME_DUPLICATE_SEPARATOR + index);
+        return createRuntimeKey(scopedBaseKeyPart + RUNTIME_DUPLICATE_SEPARATOR + index);
     }
 
     private NamespacedKey resolveCustomKey(
@@ -762,6 +776,43 @@ public final class GachaManager {
             index++;
         }
         return createRuntimeKey(baseKeyPart + RUNTIME_DUPLICATE_SEPARATOR + index);
+    }
+
+    private AttributeModifier consumeLegacyMergeModifier(
+            ItemMeta meta,
+            Attribute attribute,
+            String baseKeyPart,
+            NamespacedKey resolvedKey
+    ) {
+        NamespacedKey legacyKey = createRuntimeKey(baseKeyPart);
+        if (legacyKey.equals(resolvedKey)) {
+            return null;
+        }
+
+        AttributeModifier legacyModifier = findModifierByKey(meta, attribute, legacyKey);
+        if (legacyModifier != null) {
+            meta.removeAttributeModifier(attribute, legacyModifier);
+        }
+        return legacyModifier;
+    }
+
+    private String withItemScope(String baseKeyPart, ItemMeta meta, ConfigManager.Settings settings) {
+        String itemScope = getOrCreateItemScope(meta, settings);
+        return baseKeyPart + RUNTIME_DUPLICATE_SEPARATOR + itemScope;
+    }
+
+    private String getOrCreateItemScope(ItemMeta meta, ConfigManager.Settings settings) {
+        NamespacedKey scopeKey = createRuntimeKey(settings.pdcKey() + RUNTIME_ITEM_SCOPE_SUFFIX);
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+
+        String existing = pdc.get(scopeKey, PersistentDataType.STRING);
+        if (existing != null && !existing.isBlank()) {
+            return sanitizeKeyPart(existing);
+        }
+
+        String generated = UUID.randomUUID().toString().replace("-", "");
+        pdc.set(scopeKey, PersistentDataType.STRING, generated);
+        return generated;
     }
 
     private boolean hasModifierWithKey(ItemMeta meta, Attribute attribute, NamespacedKey key) {
@@ -964,6 +1015,7 @@ public final class GachaManager {
         pdc.remove(createRuntimeKey(settings.pdcKey()));
         pdc.remove(createRuntimeKey(settings.pdcKey() + "_rarity"));
         pdc.remove(createRuntimeKey(settings.pdcKey() + "_attribute_ids"));
+        pdc.remove(createRuntimeKey(settings.pdcKey() + RUNTIME_ITEM_SCOPE_SUFFIX));
         clearLoreCache(meta, settings);
     }
 
